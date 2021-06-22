@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>TruckPlatooning</title>
+    <script src="jquery-3.6.0.min.js"></script>
+    <script>
+        //variable declaration
+        var table;
+        var th;
+        var tr;
+        var td;
+        var oldData;
+        //make a get request to get a json object
+        var getJSON = function(url, callback) {
+            var xhr = new XMLHttpRequest();
+            xhr.open('GET', url, true);
+            xhr.responseType = 'json';
+            xhr.onLoad = function() {
+              var status = xhr.status;
+              if (status === 200) {
+                callback(null, xhr.response);
+              } else {
+                callback(status, xhr.response);
+              }
+            };
+            xhr.send();
+        };
+        $(document).ready(function(){
+            repeatStart();
+            $("#hasten").click(function(){
+                hasten();
+            });
+            $("#break").click(function(){
+                braking();
+            });
+            $("#stop").click(function(){
+                stop();
+            });
+        });
+
+        function repeatStart()
+        {
+            table = document.createElement("TABLE");
+            document.getElementById("table").appendChild(table);
+            //refresh table every second
+            setInterval(function(){createTable()}, 1000);
+        }
+
+        function createTable()
+        {
+            getJSON('/getPlatoon', function(err, data){
+               if (err !== null) {
+                 console.log('Something went wrong: ' + err);
+               } else {
+                 //only change data if the data is new
+                 if (data !== oldData)
+                 {
+                     removeElements();
+                     initializeTable();
+                     for (i=0; i< data.length; i++)
+                     {
+                        appendTableInformation(data[i]);
+                     }
+                     oldData = data;
+                 }
+               }
+            });
+        }
+
+        function braking()
+        {
+            var speed = document.getElementById("textBreak").value;
+            getJSON('/break/' + speed, function(err, data){
+               if (err !== null) {
+                 console.log('Something went wrong: ' + err);
+               }
+            });
+        }
+
+        function hasten()
+        {
+            var speed = document.getElementById("textHasten").value;
+            getJSON('/hasten/' + speed, function(err, data){
+               if (err !== null) {
+                 console.log('Something went wrong: ' + err);
+               }
+            });
+        }
+
+        function stop()
+        {
+            getJSON('/stop', function(err, data){
+               if (err !== null) {
+                 console.log('Something went wrong: ' + err);
+               }
+            });
+        }
+
+        //remove all element of the table
+        function removeElements()
+        {
+            while (table.firstChild)
+            {
+                table.removeChild(table.firstChild);
+            }
+        }
+
+        //create the header of the table
+        function initializeTable()
+        {
+            tr = document.createElement("TR");
+            table.appendChild(tr);
+            th = document.createElement("TH");
+            th.innerHTML = "position";
+            tr.appendChild(th);
+            th = document.createElement("TH");
+            th.innerHTML = "id";
+            tr.appendChild(th);
+            th = document.createElement("TH");
+            th.innerHTML = "front";
+            tr.appendChild(th);
+            th = document.createElement("TH");
+            th.innerHTML = "back";
+            tr.appendChild(th);
+            th = document.createElement("TH");
+            th.innerHTML = "leader";
+            tr.appendChild(th);
+            th = document.createElement("TH");
+            th.innerHTML = "speed";
+            tr.appendChild(th);
+        }
+
+        //fill the table with the data
+        function appendTableInformation(data)
+        {
+            tr = document.createElement("TR");
+            table.appendChild(tr);
+            td = document.createElement("TD");
+            td.innerHTML = data.positionId;
+            tr.appendChild(td);
+            td = document.createElement("TD");
+            td.innerHTML = data.id;
+            tr.appendChild(td);
+            td = document.createElement("TD");
+            td.innerHTML = data.frontId;
+            tr.appendChild(td);
+            td = document.createElement("TD");
+            td.innerHTML = data.backId;
+            tr.appendChild(td);
+            td = document.createElement("TD");
+            td.innerHTML = data.leader;
+            tr.appendChild(td);
+            td = document.createElement("TD");
+            td.innerHTML = data.speed;
+            tr.appendChild(td);
+        }
+    </script>
+</head>
+<body>
+    <div id="inputs">
+        <input id="textBreak"></input>
+        <button id="break">break</button>
+        <p></p>
+        <input id="textHasten"></input>
+        <button id="hasten">hasten</button>
+        <p></p>
+        <button id="stop">stop</button>
+    </div>
+    <div id="table"></div>
+</body>
+</html>
